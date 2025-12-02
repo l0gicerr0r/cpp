@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">
+            <i class="bi bi-car-front-fill"></i> AutoMotive Hub
+        </h1>
+        <p class="lead mb-4">Your trusted platform for buying and selling vehicles</p>
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg me-2">Get Started</a>
+        <a href="{{ url_for('main.list_vehicles') }}" class="btn btn-outline-light btn-lg">Browse Vehicles</a>
+        {% else %}
+        <a href="{{ url_for('main.add_vehicle') }}" class="btn btn-primary btn-lg me-2">List Your Vehicle</a>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-light btn-lg">My Dashboard</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Choose AutoMotive Hub?</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <i class="bi bi-cloud-check display-4 text-primary mb-3"></i>
+                    <h4>Cloud-Powered</h4>
+                    <p class="text-muted">Built on AWS infrastructure for reliability and scalability</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <i class="bi bi-shield-check display-4 text-primary mb-3"></i>
+                    <h4>Secure Platform</h4>
+                    <p class="text-muted">Your data is protected with enterprise-grade security</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <i class="bi bi-graph-up display-4 text-primary mb-3"></i>
+                    <h4>Smart Analytics</h4>
+                    <p class="text-muted">Get insights on vehicle pricing and market trends</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Latest Listings</h2>
+        {% if vehicles %}
+        <div class="row g-4">
+            {% for vehicle in vehicles %}
+            <div class="col-md-4">
+                <div class="card card-vehicle h-100 shadow-sm">
+                    {% if vehicle.image_url %}
+                    <img src="{{ vehicle.image_url }}" class="card-img-top" alt="{{ vehicle.make }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="bi bi-car-front display-1 text-white"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</h5>
+                        <p class="card-text text-primary fw-bold fs-4">${{ "{:,.2f}".format(vehicle.price) }}</p>
+                        <a href="{{ url_for('main.view_vehicle', id=vehicle.id) }}" class="btn btn-outline-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.list_vehicles') }}" class="btn btn-primary">View All Vehicles</a>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="lead text-muted mt-3">No vehicles listed yet. Be the first to list!</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.add_vehicle') }}" class="btn btn-primary">Add Vehicle</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

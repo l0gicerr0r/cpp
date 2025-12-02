@@ -1,0 +1,67 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+      
+      - name: Get EC2 Instance IP
+        id: get-ip
+        run: |
+          INSTANCE_IP=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=automotive-flask-server" "Name=instance-state-name,Values=running" \
+            --query "Reservations[0].Instances[0].PublicIpAddress" \
+            --output text)
+          echo "EC2_IP=$INSTANCE_IP" >> $GITHUB_OUTPUT
+          echo "EC2 Instance IP: $INSTANCE_IP"
+      
+      - name: Setup SSH Key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+      
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} << 'ENDSSH'
+            cd /home/ec2-user/automotive-app
+            
+            # Pull latest code
+            git pull origin main || git pull origin master
+            
+            # Install dependencies
+            pip3.11 install -r requirements.txt
+            
+            # Stop existing Flask app if running
+            pkill -f "python3.11 app.py" || true
+            sleep 2
+            
+            # Start Flask app with nohup
+            nohup python3.11 app.py > /home/ec2-user/flask.log 2>&1 &
+            
+            echo "Deployment completed successfully!"
+          ENDSSH
+      
+      - name: Cleanup
+        run: rm -f private_key.pem
+      
+      - name: Health Check
+        run: |
+          echo "Waiting for app to start..."
+          sleep 10
+          curl -f http://${{ steps.get-ip.outputs.EC2_IP }}:5000 || echo "App may still be starting..."

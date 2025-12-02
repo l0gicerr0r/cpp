@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Vehicles - AutoMotive Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4"><i class="bi bi-grid"></i> All Vehicles</h2>
+    
+    {% if vehicles %}
+    <div class="row g-4">
+        {% for vehicle in vehicles %}
+        <div class="col-md-4">
+            <div class="card card-vehicle h-100 shadow-sm">
+                {% if vehicle.image_url %}
+                <img src="{{ vehicle.image_url }}" class="card-img-top" alt="{{ vehicle.make }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="bi bi-car-front display-1 text-white"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</h5>
+                    <p class="card-text text-primary fw-bold fs-4">${{ "{:,.2f}".format(vehicle.price) }}</p>
+                    <p class="card-text text-muted small">
+                        <i class="bi bi-person"></i> {{ vehicle.owner.username }}
+                    </p>
+                    <a href="{{ url_for('main.view_vehicle', id=vehicle.id) }}" class="btn btn-outline-primary w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted"></i>
+        <p class="lead text-muted mt-3">No vehicles available.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

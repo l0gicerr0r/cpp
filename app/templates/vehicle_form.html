@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - AutoMotive Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="bi bi-car-front"></i> {{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Make *</label>
+                                {{ form.make(class="form-control", placeholder="e.g., Toyota, Honda, BMW") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Model *</label>
+                                {{ form.model(class="form-control", placeholder="e.g., Camry, Civic, X5") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Year *</label>
+                                {{ form.year(class="form-control", placeholder="e.g., 2020") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Price ($) *</label>
+                                {{ form.price(class="form-control", placeholder="e.g., 25000") }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description(class="form-control", rows="4", placeholder="Describe your vehicle...") }}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Vehicle Image</label>
+                            {{ form.image(class="form-control") }}
+                            <small class="text-muted">Supported formats: JPG, PNG, GIF (Uploaded to AWS S3)</small>
+                            {% if vehicle and vehicle.image_url %}
+                            <div class="mt-2">
+                                <img src="{{ vehicle.image_url }}" class="img-thumbnail" style="max-height: 150px;">
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-lg"></i> {{ 'Update' if vehicle else 'Add' }} Vehicle
+                            </button>
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

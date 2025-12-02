@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - AutoMotive Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-speedometer2"></i> My Dashboard</h2>
+        <a href="{{ url_for('main.add_vehicle') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Vehicle
+        </a>
+    </div>
+
+    <!-- Analytics Summary -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ analytics.total_vehicles }}</h3>
+                    <p class="mb-0">Total Vehicles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>${{ "{:,.0f}".format(analytics.average_price) }}</h3>
+                    <p class="mb-0">Average Price</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ analytics.average_age }} yrs</h3>
+                    <p class="mb-0">Average Age</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>${{ "{:,.0f}".format(analytics.price_range.max) }}</h3>
+                    <p class="mb-0">Highest Price</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicles List -->
+    <h4 class="mb-3">My Vehicles</h4>
+    {% if vehicles %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Vehicle</th>
+                    <th>Year</th>
+                    <th>Price</th>
+                    <th>Listed On</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vehicle in vehicles %}
+                <tr>
+                    <td>
+                        <strong>{{ vehicle.make }} {{ vehicle.model }}</strong>
+                    </td>
+                    <td>{{ vehicle.year }}</td>
+                    <td class="text-success fw-bold">${{ "{:,.2f}".format(vehicle.price) }}</td>
+                    <td>{{ vehicle.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('main.view_vehicle', id=vehicle.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{{ url_for('main.edit_vehicle', id=vehicle.id) }}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form action="{{ url_for('main.delete_vehicle', id=vehicle.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this vehicle?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle"></i> You haven't listed any vehicles yet.
+        <a href="{{ url_for('main.add_vehicle') }}">Add your first vehicle</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

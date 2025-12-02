@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Analytics - AutoMotive Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4"><i class="bi bi-bar-chart"></i> Vehicle Analytics</h2>
+    <p class="lead text-muted mb-5">Powered by Custom Automotive Library</p>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-car-front display-4 mb-2"></i>
+                    <h2>{{ analytics.total_vehicles }}</h2>
+                    <p class="mb-0">Total Vehicles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-currency-dollar display-4 mb-2"></i>
+                    <h2>${{ "{:,.0f}".format(analytics.average_price) }}</h2>
+                    <p class="mb-0">Average Price</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar display-4 mb-2"></i>
+                    <h2>{{ analytics.average_age }}</h2>
+                    <p class="mb-0">Average Age (years)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up-arrow display-4 mb-2"></i>
+                    <h2>${{ "{:,.0f}".format(analytics.price_range.min) }} - ${{ "{:,.0f}".format(analytics.price_range.max) }}</h2>
+                    <p class="mb-0">Price Range</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-building"></i> Vehicles by Make
+                </div>
+                <div class="card-body">
+                    {% if analytics.by_make %}
+                    <ul class="list-group list-group-flush">
+                        {% for make, count in analytics.by_make.items() %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ make }}
+                            <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">No data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-calendar-range"></i> Vehicles by Year
+                </div>
+                <div class="card-body">
+                    {% if analytics.by_year %}
+                    <ul class="list-group list-group-flush">
+                        {% for year, count in analytics.by_year.items() %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ year }}
+                            <span class="badge bg-info rounded-pill">{{ count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">No data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <i class="bi bi-cloud"></i> AWS Services Used
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2">
+                        <i class="bi bi-bucket display-4 text-primary"></i>
+                        <p class="mt-2 mb-0"><strong>S3</strong><br><small>Image Storage</small></p>
+                    </div>
+                    <div class="col-md-2">
+                        <i class="bi bi-database display-4 text-success"></i>
+                        <p class="mt-2 mb-0"><strong>DynamoDB</strong><br><small>Activity Logs</small></p>
+                    </div>
+                    <div class="col-md-2">
+                        <i class="bi bi-lightning display-4 text-warning"></i>
+                        <p class="mt-2 mb-0"><strong>Lambda</strong><br><small>Serverless</small></p>
+                    </div>
+                    <div class="col-md-2">
+                        <i class="bi bi-graph-up display-4 text-info"></i>
+                        <p class="mt-2 mb-0"><strong>CloudWatch</strong><br><small>Logging</small></p>
+                    </div>
+                    <div class="col-md-2">
+                        <i class="bi bi-key display-4 text-danger"></i>
+                        <p class="mt-2 mb-0"><strong>SSM</strong><br><small>Secrets</small></p>
+                    </div>
+                    <div class="col-md-2">
+                        <i class="bi bi-hdd display-4 text-secondary"></i>
+                        <p class="mt-2 mb-0"><strong>EC2</strong><br><small>Hosting</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
