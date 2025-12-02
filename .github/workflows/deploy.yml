@@ -39,13 +39,25 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} << 'ENDSSH'
+            # Install dependencies if not present
+            which python3.11 || sudo yum install -y python3.11 python3.11-pip git
+            
+            # Setup app directory - clone if not exists, pull if exists
+            if [ ! -d "/home/ec2-user/automotive-app/.git" ]; then
+              echo "Cloning repository for the first time..."
+              rm -rf /home/ec2-user/automotive-app
+              git clone https://github.com/l0gicerr0r/cpp.git /home/ec2-user/automotive-app
+            else
+              echo "Pulling latest code..."
+              cd /home/ec2-user/automotive-app
+              git fetch origin
+              git reset --hard origin/main || git reset --hard origin/master
+            fi
+            
             cd /home/ec2-user/automotive-app
             
-            # Pull latest code
-            git pull origin main || git pull origin master
-            
-            # Install dependencies
-            pip3.11 install -r requirements.txt
+            # Install Python dependencies
+            pip3.11 install -r requirements.txt --user
             
             # Stop existing Flask app if running
             pkill -f "python3.11 app.py" || true
@@ -53,8 +65,15 @@ jobs:
             
             # Start Flask app with nohup
             nohup python3.11 app.py > /home/ec2-user/flask.log 2>&1 &
+            sleep 3
             
-            echo "Deployment completed successfully!"
+            # Verify app is running
+            if pgrep -f "python3.11 app.py" > /dev/null; then
+              echo "✓ Flask app started successfully!"
+            else
+              echo "✗ Flask app failed to start. Check logs:"
+              tail -20 /home/ec2-user/flask.log
+            fi
           ENDSSH
       
       - name: Cleanup
