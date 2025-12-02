@@ -36,43 +36,38 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
       
+      - name: Setup AWS Credentials on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} "mkdir -p ~/.aws"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} "echo '[default]' > ~/.aws/credentials"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} "echo 'aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}' >> ~/.aws/credentials"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} "echo 'aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}' >> ~/.aws/credentials"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} "echo '[default]' > ~/.aws/config"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} "echo 'region = eu-west-1' >> ~/.aws/config"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} "chmod 600 ~/.aws/credentials ~/.aws/config"
+      
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} 'bash -s' << ENDSSH
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} << 'ENDSSH'
             # Install dependencies if not present
             which python3.11 || sudo yum install -y python3.11 python3.11-pip git
             
-            # Define app directory
+            # Define variables
             APP_DIR="/home/ec2-user/automotive-app"
             LOG_FILE="/home/ec2-user/flask.log"
             
-            # Setup AWS credentials for the application
-            mkdir -p /home/ec2-user/.aws
-            cat > /home/ec2-user/.aws/credentials << 'AWSCREDS'
-[default]
-aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
-aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-AWSCREDS
-            cat > /home/ec2-user/.aws/config << 'AWSCONFIG'
-[default]
-region = eu-west-1
-output = json
-AWSCONFIG
-            chmod 600 /home/ec2-user/.aws/credentials
-            chmod 600 /home/ec2-user/.aws/config
-            
-            # Clean up old log file (might be owned by root)
-            sudo rm -f "\$LOG_FILE"
+            # Clean up old log file
+            sudo rm -f "$LOG_FILE"
             
             # Clean up and clone fresh
             echo "Setting up application..."
-            rm -rf "\$APP_DIR"
-            git clone https://github.com/l0gicerr0r/cpp.git "\$APP_DIR"
+            rm -rf "$APP_DIR"
+            git clone https://github.com/l0gicerr0r/cpp.git "$APP_DIR"
             
             # Navigate to app directory
-            cd "\$APP_DIR"
+            cd "$APP_DIR"
             
-            # Debug: List files to verify
+            # Debug: List files
             echo "Files in app directory:"
             ls -la
             
@@ -84,17 +79,17 @@ AWSCONFIG
             sleep 2
             
             # Start Flask app with nohup
-            cd "\$APP_DIR"
-            nohup python3.11 app.py > "\$LOG_FILE" 2>&1 &
+            cd "$APP_DIR"
+            nohup python3.11 app.py > "$LOG_FILE" 2>&1 &
             sleep 5
             
             # Verify app is running
             if pgrep -f "python3.11 app.py" > /dev/null; then
-              echo "✓ Flask app started successfully!"
-              echo "App PID: \$(pgrep -f 'python3.11 app.py')"
+              echo "Flask app started successfully!"
+              pgrep -f "python3.11 app.py"
             else
-              echo "✗ Flask app failed to start. Check logs:"
-              cat "\$LOG_FILE"
+              echo "Flask app failed to start. Logs:"
+              cat "$LOG_FILE"
             fi
           ENDSSH
       
