@@ -39,13 +39,15 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.get-ip.outputs.EC2_IP }} 'bash -s' << 'ENDSSH'
-            set -e
-            
             # Install dependencies if not present
             which python3.11 || sudo yum install -y python3.11 python3.11-pip git
             
             # Define app directory
             APP_DIR="/home/ec2-user/automotive-app"
+            LOG_FILE="/home/ec2-user/flask.log"
+            
+            # Clean up old log file (might be owned by root)
+            sudo rm -f "$LOG_FILE"
             
             # Clean up and clone fresh
             echo "Setting up application..."
@@ -66,13 +68,9 @@ jobs:
             pkill -f "python3.11 app.py" || true
             sleep 2
             
-            # Create log file with proper permissions
-            touch /home/ec2-user/flask.log
-            chmod 666 /home/ec2-user/flask.log
-            
             # Start Flask app with nohup
             cd "$APP_DIR"
-            nohup python3.11 app.py > /home/ec2-user/flask.log 2>&1 &
+            nohup python3.11 app.py > "$LOG_FILE" 2>&1 &
             sleep 5
             
             # Verify app is running
@@ -81,7 +79,7 @@ jobs:
               echo "App PID: $(pgrep -f 'python3.11 app.py')"
             else
               echo "✗ Flask app failed to start. Check logs:"
-              cat /home/ec2-user/flask.log
+              cat "$LOG_FILE"
             fi
           ENDSSH
       
