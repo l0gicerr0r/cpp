@@ -42,19 +42,17 @@ jobs:
             # Install dependencies if not present
             which python3.11 || sudo yum install -y python3.11 python3.11-pip git
             
-            # Setup app directory - clone if not exists, pull if exists
-            if [ ! -d "/home/ec2-user/automotive-app/.git" ]; then
-              echo "Cloning repository for the first time..."
-              rm -rf /home/ec2-user/automotive-app
-              git clone https://github.com/l0gicerr0r/cpp.git /home/ec2-user/automotive-app
-            else
-              echo "Pulling latest code..."
-              cd /home/ec2-user/automotive-app
-              git fetch origin
-              git reset --hard origin/main || git reset --hard origin/master
-            fi
+            # Clean up and clone fresh every time for reliability
+            echo "Setting up application..."
+            rm -rf /home/ec2-user/automotive-app
+            git clone https://github.com/l0gicerr0r/cpp.git /home/ec2-user/automotive-app
             
+            # Navigate to app directory
             cd /home/ec2-user/automotive-app
+            
+            # Debug: List files to verify
+            echo "Files in app directory:"
+            ls -la
             
             # Install Python dependencies
             pip3.11 install -r requirements.txt --user
@@ -64,15 +62,17 @@ jobs:
             sleep 2
             
             # Start Flask app with nohup
+            cd /home/ec2-user/automotive-app
             nohup python3.11 app.py > /home/ec2-user/flask.log 2>&1 &
-            sleep 3
+            sleep 5
             
             # Verify app is running
             if pgrep -f "python3.11 app.py" > /dev/null; then
               echo "✓ Flask app started successfully!"
+              echo "App PID: $(pgrep -f 'python3.11 app.py')"
             else
               echo "✗ Flask app failed to start. Check logs:"
-              tail -20 /home/ec2-user/flask.log
+              tail -30 /home/ec2-user/flask.log
             fi
           ENDSSH
       
